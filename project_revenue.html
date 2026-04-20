@@ -981,7 +981,7 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   // ---- Row 23: Turnover Charge Collected from Guest ---------------------
   ws.mergeCells("A23:D23");
   const c23 = ws.getCell("A23");
-  c23.value = "Turnover Charge Collected from Guest  (approximately 20 guest stays)";
+  c23.value = "Total Annual Turnover Charge Collected from Guest  (across approximately 20 guest stays)";
   c23.font = XLSX_STYLES.normal10;
   ["E23", "G23", "I23"].forEach((addr) => {
     const cell = ws.getCell(addr);
