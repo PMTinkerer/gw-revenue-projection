@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.local
+
+# Generated projection outputs (markdown + PNG)
+projection_*.md
+chart_*.png
+
+# Source PDFs held elsewhere — keep them out even if dropped here accidentally
+GW_Revenue_Projection_Framework_*.pdf
+GW_Revenue_Projection_Methodology_*.pdf
+
+# Claude / tooling
+.claude/

@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GW Revenue Projection — May–Oct (v1.0)</title>
+<style>
+  :root {
+    --fg: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --accent: #0f766e;
+    --warn: #b45309;
+    --warn-bg: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.45; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  header.page { margin-bottom: 20px; }
+  header.page h1 { margin: 0 0 4px; font-size: 20px; }
+  header.page .sub { color: var(--muted); font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input[type=text], input[type=number], select {
+    width: 100%; padding: 8px 10px; font-size: 15px; border: 1px solid var(--line);
+    border-radius: 6px; background: #fff; font-family: inherit; color: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14px; padding: 9px 16px; border-radius: 6px;
+    border: 1px solid var(--line); background: #fff; color: var(--fg); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { filter: brightness(0.95); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error { color: #b91c1c; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .haircut-flag { background: var(--warn-bg); color: var(--warn); border-radius: 6px;
+    padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .meta-list { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+  .meta-list li { padding: 2px 0; }
+  .meta-list .lbl { color: var(--muted); display: inline-block; width: 110px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { background: #f3f4f6; font-weight: 600; }
+  tfoot td { font-weight: 700; border-top: 2px solid var(--fg); border-bottom: none; }
+  .scroll-x { overflow-x: auto; }
+  blockquote { margin: 0; padding: 12px 14px; border-left: 3px solid var(--accent);
+    background: #f0fdfa; color: #064e3b; font-size: 14px; border-radius: 0 6px 6px 0; }
+  .footer-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  h2 { font-size: 16px; margin: 18px 0 10px; }
+  .output { display: none; }
+  .output.visible { display: block; }
+</style>
+</head>
+<body>
+<main>
+  <header class="page">
+    <h1>Grand Welcome — May–October Revenue Projection</h1>
+    <div class="sub">Framework v1.0 · Southern Coastal Maine · locked ratios pending 2026 year-end validation</div>
+  </header>
+
+  <section class="card">
+    <form id="proj-form" autocomplete="off" novalidate>
+      <div class="grid">
+        <div>
+          <label for="label">Property identifier / label</label>
+          <input id="label" type="text" placeholder="e.g. Ocean View Cottage" required />
+        </div>
+
+        <div>
+          <label for="bucket">Bedroom bucket</label>
+          <select id="bucket" required>
+            <option value="" disabled selected>Select one…</option>
+            <option value="1-2br">1-2br</option>
+            <option value="3br">3br</option>
+            <option value="4br">4br</option>
+            <option value="5+br">5+br</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="use_case">Use case</label>
+          <select id="use_case" required>
+            <option value="" disabled selected>Select one…</option>
+            <option value="owner_onboarding">owner_onboarding</option>
+            <option value="acquisition_underwriting">acquisition_underwriting</option>
+          </select>
+          <div class="hint">Acquisition underwriting applies a 10% haircut to the Soft peak (Section 7).</div>
+        </div>
+
+        <div>
+          <label for="peak_central">Peak Jul/Aug ADR — Mid ($)</label>
+          <input id="peak_central" type="number" step="1" min="1" placeholder="e.g. 1000" required />
+          <div class="hint">Required. Midpoint of the market-condition range.</div>
+        </div>
+
+        <div>
+          <label for="peak_conservative">Peak Jul/Aug ADR — Soft ($)</label>
+          <input id="peak_conservative" type="number" step="1" min="1" placeholder="blank = 80% of Mid" />
+          <div class="hint">Optional. Defaults to 80% of Mid.</div>
+        </div>
+
+        <div>
+          <label for="peak_stretch">Peak Jul/Aug ADR — Strong ($)</label>
+          <input id="peak_stretch" type="number" step="1" min="1" placeholder="blank = 130% of Mid" />
+          <div class="hint">Optional. Defaults to 130% of Mid.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary">Project revenue</button>
+        <button type="reset">Reset</button>
+      </div>
+      <div class="error" id="err"></div>
+    </form>
+  </section>
+
+  <section id="output" class="output">
+    <div class="card">
+      <h2 style="margin-top:0">Projection</h2>
+      <div id="haircut" class="haircut-flag" style="display:none"></div>
+      <ul class="meta-list" id="meta"></ul>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Month-by-month</h2>
+      <div class="scroll-x">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th>Month</th><th>Occ</th><th>Nights</th>
+              <th>Soft ADR</th><th>Soft Rev</th>
+              <th>Mid ADR</th><th>Mid Rev</th>
+              <th>Strong ADR</th><th>Strong Rev</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td>TOTAL</td><td></td><td></td>
+              <td></td><td id="total_con"></td>
+              <td></td><td id="total_cen"></td>
+              <td></td><td id="total_str"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Standard communication (Framework Section 7)</h2>
+      <blockquote id="paragraph"></blockquote>
+      <div class="actions">
+        <button id="copy-para" type="button">Copy paragraph</button>
+        <button id="download-md" type="button">Download markdown</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Canva chart (7.13″ × 3.38″ @ 300 DPI)</h2>
+      <p class="footer-note" style="margin-top:-4px">
+        Sized exactly to the empty rectangle in the Grand Welcome revenue template.
+        Drag the PNG onto the frame in Canva — it snaps to fit.
+      </p>
+      <div id="chart-preview-wrap"
+           style="background:#f3f4f6; border:1px solid var(--line); border-radius:8px;
+                  padding:10px; overflow:auto;">
+        <canvas id="chart-preview" style="display:block; width:100%; height:auto; max-width:100%;"></canvas>
+      </div>
+      <div class="actions">
+        <button id="download-png" type="button" class="primary">Download chart PNG</button>
+        <button id="copy-png" type="button">Copy image to clipboard</button>
+      </div>
+      <div class="footer-note">
+        Chart modeled on a mature listing with 3+ years of established reviews.
+        Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---------------------------------------------------------------------------
+// v1.0 LOCKED CONSTANTS — mirror project_revenue.py.
+// Source: GW_Revenue_Projection_Framework_v1.0 (April 2026), Sections 4 & 5.
+// ---------------------------------------------------------------------------
+const FRAMEWORK_VERSION = "1.0";
+const MONTHS = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+const DAYS_IN_MONTH = { May: 31, Jun: 30, Jul: 31, Aug: 31, Sep: 30, Oct: 31 };
+
+const ADR_RATIOS = {
+  "1-2br": { May: 0.64, Jun: 0.77, Jul: 1.00, Aug: 1.00, Sep: 0.61, Oct: 0.61 },
+  "3br":   { May: 0.64, Jun: 0.80, Jul: 1.00, Aug: 1.00, Sep: 0.71, Oct: 0.67 },
+  "4br":   { May: 0.49, Jun: 0.66, Jul: 0.98, Aug: 1.02, Sep: 0.72, Oct: 0.56 },
+  "5+br":  { May: 0.64, Jun: 0.83, Jul: 0.99, Aug: 1.01, Sep: 0.68, Oct: 0.59 },
+};
+
+const OCCUPANCY = {
+  "1-2br": { May: 0.53, Jun: 0.65, Jul: 0.92, Aug: 0.92, Sep: 0.61, Oct: 0.62 },
+  "3br":   { May: 0.53, Jun: 0.65, Jul: 0.92, Aug: 0.92, Sep: 0.59, Oct: 0.57 },
+  "4br":   { May: 0.50, Jun: 0.64, Jul: 0.92, Aug: 0.92, Sep: 0.56, Oct: 0.49 },
+  "5+br":  { May: 0.44, Jun: 0.58, Jul: 0.92, Aug: 0.92, Sep: 0.48, Oct: 0.48 },
+};
+
+const UNDERWRITING_CONSERVATIVE_HAIRCUT = 0.9;
+const DEFAULT_CONSERVATIVE_MULT = 0.80;
+const DEFAULT_STRETCH_MULT = 1.30;
+
+// ---------------------------------------------------------------------------
+// Calculation
+// ---------------------------------------------------------------------------
+function projectScenario(bucket, peakAdr) {
+  const rows = [];
+  let total = 0;
+  for (const m of MONTHS) {
+    const adr = peakAdr * ADR_RATIOS[bucket][m];
+    const nights = DAYS_IN_MONTH[m] * OCCUPANCY[bucket][m];
+    const revenue = adr * nights;
+    rows.push({ month: m, adr, nights, revenue, occupancy: OCCUPANCY[bucket][m] });
+    total += revenue;
+  }
+  return { rows, total };
+}
+
+// ---------------------------------------------------------------------------
+// Formatting
+// ---------------------------------------------------------------------------
+const money = (v) => "$" + Math.round(v).toLocaleString("en-US");
+const adrFmt = (v) => "$" + Math.round(v).toLocaleString("en-US");
+const nightsFmt = (v) => v.toFixed(1);
+const occFmt = (v) => Math.round(v * 100) + "%";
+
+function sanitizeFilename(label) {
+  const out = [];
+  for (const ch of label) {
+    if (ch === " ") out.push("_");
+    else if ('<>:"/\\|?*\0'.includes(ch) || ch.charCodeAt(0) < 32) continue;
+    else out.push(ch);
+  }
+  const cleaned = out.join("").replace(/^[._ ]+|[._ ]+$/g, "");
+  return cleaned || "property";
+}
+
+function todayYmd() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}${m}${day}`;
+}
+
+function todayIso() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
+let lastState = null;
+
+function render(state) {
+  lastState = state;
+  const { label, bucket, useCase, conEntered, conUsed, cen, strch, haircut } = state;
+
+  const con = projectScenario(bucket, conUsed);
+  const cenS = projectScenario(bucket, cen);
+  const strS = projectScenario(bucket, strch);
+
+  const meta = document.getElementById("meta");
+  meta.innerHTML = "";
+  function mrow(lbl, val) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="lbl">${lbl}</span>${val}`;
+    meta.appendChild(li);
+  }
+  mrow("Property:", escapeHtml(label));
+  mrow("Bucket:", bucket);
+  mrow("Use case:", useCase);
+  mrow("Mid peak:", adrFmt(cen));
+  mrow("Strong peak:", adrFmt(strch));
+  mrow("Soft peak:", haircut
+    ? `${adrFmt(conEntered)} entered → <strong>${adrFmt(conUsed)}</strong> used`
+    : adrFmt(conUsed));
+
+  const hc = document.getElementById("haircut");
+  if (haircut) {
+    hc.textContent =
+      `Acquisition underwriting: 10% haircut applied to the Soft peak per Section 7. ` +
+      `Calculation uses ${adrFmt(conUsed)} (entered ${adrFmt(conEntered)}).`;
+    hc.style.display = "block";
+  } else {
+    hc.style.display = "none";
+  }
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  for (let i = 0; i < MONTHS.length; i++) {
+    const c = con.rows[i], m = cenS.rows[i], s = strS.rows[i];
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td>${c.month}</td>` +
+      `<td>${occFmt(c.occupancy)}</td>` +
+      `<td>${nightsFmt(c.nights)}</td>` +
+      `<td>${adrFmt(c.adr)}</td><td>${money(c.revenue)}</td>` +
+      `<td>${adrFmt(m.adr)}</td><td>${money(m.revenue)}</td>` +
+      `<td>${adrFmt(s.adr)}</td><td>${money(s.revenue)}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById("total_con").textContent = money(con.total);
+  document.getElementById("total_cen").textContent = money(cenS.total);
+  document.getElementById("total_str").textContent = money(strS.total);
+
+  const para =
+    `Based on comparable homes in our portfolio and current market demand data, ` +
+    `and assuming the owner provides full rental availability in peak summer, ` +
+    `we project ${money(cenS.total)} for May through October. ` +
+    `If the nightly rate comes in softer than expected you're looking at ` +
+    `${money(con.total)}; if the home performs like our stronger comps you ` +
+    `could see ${money(strS.total)}. July and August are the most predictable ` +
+    `months because we consistently fill peak weeks when availability is open.`;
+  document.getElementById("paragraph").textContent = para;
+
+  document.getElementById("output").classList.add("visible");
+  document.getElementById("output").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  state._computed = { con, cenS, strS, paragraph: para };
+
+  renderChart(state);
+}
+
+// ---------------------------------------------------------------------------
+// Canvas chart — exact Canva frame size at 300 DPI.
+// 7.13in × 3.38in × 300dpi  =>  2139 × 1014 px
+// ---------------------------------------------------------------------------
+const CHART_W = 2139;
+const CHART_H = 1014;
+
+// Palette pulled from the Canva "Grand Welcome Revenue Projection" template.
+const PALETTE = {
+  bg:         "#FFFFFF",
+  text:       "#1F2937",
+  textSoft:   "#4B5563",
+  muted:      "#6B7280",
+  grid:       "#E5E7EB",
+  axis:       "#9CA3AF",
+  beigeTint:  "#FAF3E6",     // subtle background panel tint
+  brand:      "#4A9BD8",     // banner blue
+  brandDark:  "#1F6FA8",
+  brandLight: "#BFDDEF",
+  gold:       "#B89562",     // "GRAND WELCOME" gold
+};
+
+function niceCeiling(n) {
+  if (n <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(n)));
+  const norm = n / mag;
+  let nice;
+  if (norm <= 1)       nice = 1;
+  else if (norm <= 2)  nice = 2;
+  else if (norm <= 2.5) nice = 2.5;
+  else if (norm <= 5)  nice = 5;
+  else                 nice = 10;
+  return nice * mag;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function formatMoneyShort(v) {
+  // Compact y-axis label: $30k, $1.2k, $125k
+  if (v >= 1000) {
+    const k = v / 1000;
+    const rounded = Math.round(k * 10) / 10;
+    return "$" + (rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)) + "k";
+  }
+  return "$" + Math.round(v);
+}
+
+let _lastChartCanvas = null;
+
+function drawChartTo(canvas, state) {
+  const { con, cenS, strS } = state._computed;
+  const { bucket, conEntered, conUsed, cen: cenPeak, strch: strPeak, haircut } = state;
+  const W = CHART_W, H = CHART_H;
+
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  ctx.fillStyle = PALETTE.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // --- Title block ---------------------------------------------------------
+  ctx.fillStyle = PALETTE.text;
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.font = '700 58px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.fillText("May – October Revenue Projection", 70, 46);
+
+  ctx.fillStyle = PALETTE.textSoft;
+  ctx.font = '400 26px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  const subtitle = `${bucket.toUpperCase()} home  ·  Soft / Mid / Strong market scenarios`;
+  ctx.fillText(subtitle, 70, 120);
+
+  // Gold accent bar under title
+  ctx.fillStyle = PALETTE.gold;
+  ctx.fillRect(70, 170, 120, 5);
+
+  // --- Year-3 badge (top right) -------------------------------------------
+  // Present enough to read, not loud enough to compete with the chart.
+  // Beige fill + gold border + dark-gold small-caps text. Matches Canva palette.
+  {
+    const badgeText = "MATURE LISTING  ·  3+ YEARS OF REVIEWS";
+    const padX = 22;
+    ctx.font = '700 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+    const textW = ctx.measureText(badgeText).width;
+    const badgeW = textW + padX * 2;
+    const badgeH = 46;
+    const badgeX = W - 70 - badgeW;
+    const badgeY = 52;
+
+    ctx.fillStyle = PALETTE.beigeTint;
+    roundRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.gold;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeH / 2);
+    ctx.stroke();
+    ctx.fillStyle = "#8B6F3F";
+    ctx.fillText(badgeText, badgeX + padX, badgeY + badgeH / 2 + 1);
+  }
+
+  // --- Layout regions ------------------------------------------------------
+  // Chart on left, totals column on right.
+  const chartBoxX = 70,  chartBoxY = 210, chartBoxW = 1370, chartBoxH = 720;
+  const sidebarX  = 1500, sidebarY = 210, sidebarW = 570,  sidebarH = 720;
+
+  const plotLeft   = chartBoxX + 110; // leave room for y-axis labels
+  const plotRight  = chartBoxX + chartBoxW - 10;
+  const plotTop    = chartBoxY + 70;  // leave room for legend
+  const plotBottom = chartBoxY + chartBoxH - 70; // leave room for x-axis labels
+  const plotW      = plotRight - plotLeft;
+  const plotH      = plotBottom - plotTop;
+
+  // Determine y-axis scale.
+  let maxRev = 0;
+  for (let i = 0; i < MONTHS.length; i++) {
+    maxRev = Math.max(maxRev,
+      con.rows[i].revenue,
+      cenS.rows[i].revenue,
+      strS.rows[i].revenue);
+  }
+  const niceMax = niceCeiling(maxRev);
+  const ySteps = 5;
+
+  // --- Legend (inside chart box, top) --------------------------------------
+  const legendY = chartBoxY + 20;
+  const legendItems = [
+    { label: "Soft",   color: PALETTE.brandLight },
+    { label: "Mid",    color: PALETTE.brand },
+    { label: "Strong", color: PALETTE.brandDark },
+  ];
+  ctx.textBaseline = "middle";
+  ctx.font = '600 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  let lx = plotLeft;
+  for (const li of legendItems) {
+    ctx.fillStyle = li.color;
+    roundRect(ctx, lx, legendY - 10, 28, 20, 4);
+    ctx.fill();
+    ctx.fillStyle = PALETTE.textSoft;
+    ctx.textAlign = "left";
+    ctx.fillText(li.label, lx + 38, legendY);
+    lx += ctx.measureText(li.label).width + 90;
+  }
+
+  // --- Y-axis gridlines and labels ----------------------------------------
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "right";
+  ctx.font = '500 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = (niceMax * i) / ySteps;
+    const y = plotBottom - (i / ySteps) * plotH;
+
+    ctx.strokeStyle = PALETTE.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(plotLeft, y);
+    ctx.lineTo(plotRight, y);
+    ctx.stroke();
+
+    ctx.fillStyle = PALETTE.muted;
+    ctx.fillText(formatMoneyShort(v), plotLeft - 14, y);
+  }
+
+  // --- Bars ----------------------------------------------------------------
+  const groupW = plotW / MONTHS.length;
+  const groupPaddingRatio = 0.22;              // empty space on each side of the triplet
+  const innerW   = groupW * (1 - groupPaddingRatio * 2);
+  const barGap   = 6;
+  const barW     = (innerW - barGap * 2) / 3;
+
+  for (let i = 0; i < MONTHS.length; i++) {
+    const groupLeft = plotLeft + groupW * i + groupW * groupPaddingRatio;
+    const scenarios = [
+      { val: con.rows[i].revenue,   color: PALETTE.brandLight },
+      { val: cenS.rows[i].revenue,  color: PALETTE.brand },
+      { val: strS.rows[i].revenue,  color: PALETTE.brandDark },
+    ];
+    for (let j = 0; j < 3; j++) {
+      const s = scenarios[j];
+      const bh = (s.val / niceMax) * plotH;
+      const bx = groupLeft + j * (barW + barGap);
+      const by = plotBottom - bh;
+      ctx.fillStyle = s.color;
+      roundRect(ctx, bx, by, barW, Math.max(bh, 2), 4);
+      ctx.fill();
+    }
+
+    // Month label
+    ctx.fillStyle = PALETTE.text;
+    ctx.font = '600 24px "Helvetica Neue", Helvetica, Arial, sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(MONTHS[i], groupLeft + innerW / 2, plotBottom + 14);
+  }
+
+  // Bottom axis line
+  ctx.strokeStyle = PALETTE.axis;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(plotLeft, plotBottom);
+  ctx.lineTo(plotRight, plotBottom);
+  ctx.stroke();
+
+  // --- Totals sidebar ------------------------------------------------------
+  // Header
+  ctx.fillStyle = PALETTE.textSoft;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = '700 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.fillText("MAY – OCT TOTALS", sidebarX, sidebarY);
+
+  const cards = [
+    { label: "Soft",   value: con.total,  fg: PALETTE.brandDark, bg: PALETTE.brandLight },
+    { label: "Mid",    value: cenS.total, fg: "#FFFFFF",         bg: PALETTE.brand },
+    { label: "Strong", value: strS.total, fg: "#FFFFFF",         bg: PALETTE.brandDark },
+  ];
+  const cardGap = 18;
+  const cardAreaTop = sidebarY + 44;
+  const cardAreaH = sidebarH - 110; // leave room for the footer note
+  const cardH = (cardAreaH - cardGap * (cards.length - 1)) / cards.length;
+
+  let cy = cardAreaTop;
+  for (const c of cards) {
+    ctx.fillStyle = c.bg;
+    roundRect(ctx, sidebarX, cy, sidebarW, cardH, 14);
+    ctx.fill();
+
+    ctx.fillStyle = c.fg;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = '700 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
+    ctx.fillText(c.label.toUpperCase(), sidebarX + 28, cy + 28);
+
+    ctx.font = '700 64px "Helvetica Neue", Helvetica, Arial, sans-serif';
+    const valStr = "$" + Math.round(c.value).toLocaleString("en-US");
+    ctx.fillText(valStr, sidebarX + 28, cy + 74);
+
+    cy += cardH + cardGap;
+  }
+
+  // --- Footer --------------------------------------------------------------
+  // Two lines only: the Soft/Mid/Strong disclaimer and the framework tag.
+  // Peak-ADR inputs and the 92% floor note are intentionally removed.
+  ctx.fillStyle = PALETTE.textSoft;
+  ctx.font = '500 20px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(
+    "Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.",
+    70, H - 48
+  );
+
+  ctx.fillStyle = PALETTE.muted;
+  ctx.font = '500 18px "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.fillText("Framework v" + FRAMEWORK_VERSION, 70, H - 20);
+}
+
+
+function renderChart(state) {
+  const canvas = document.getElementById("chart-preview");
+  drawChartTo(canvas, state);
+  _lastChartCanvas = canvas;
+}
+
+function downloadChartPNG() {
+  if (!_lastChartCanvas || !lastState) return;
+  _lastChartCanvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chart_${sanitizeFilename(lastState.label)}_${todayYmd()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, "image/png");
+}
+
+async function copyChartPNG() {
+  if (!_lastChartCanvas) return;
+  const btn = document.getElementById("copy-png");
+  const old = btn.textContent;
+  try {
+    const blob = await new Promise((res) => _lastChartCanvas.toBlob(res, "image/png"));
+    if (!blob) throw new Error("blob failed");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    btn.textContent = "Copied ✓";
+    setTimeout(() => (btn.textContent = old), 1400);
+  } catch (e) {
+    btn.textContent = "Copy failed — use Download";
+    setTimeout(() => (btn.textContent = old), 1800);
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+}
+
+// ---------------------------------------------------------------------------
+// Markdown download
+// ---------------------------------------------------------------------------
+function buildMarkdown(state) {
+  const { label, bucket, useCase, conEntered, conUsed, cen, strch, haircut, _computed } = state;
+  const { con, cenS, strS, paragraph } = _computed;
+  const L = [];
+  L.push(`# Revenue Projection — ${label}`);
+  L.push("");
+  L.push(`Framework v${FRAMEWORK_VERSION}  ·  Generated ${todayIso()}`);
+  L.push("");
+  L.push(`- **Property:** ${label}`);
+  L.push(`- **Bucket:** ${bucket}`);
+  L.push(`- **Use case:** ${useCase}`);
+  L.push("");
+  L.push("## Peak Jul/Aug ADR Inputs");
+  L.push("");
+  if (haircut) {
+    L.push(`- Soft: ${adrFmt(conEntered)} entered → **${adrFmt(conUsed)} used** ` +
+           `(acquisition_underwriting 10% haircut applied per Section 7)`);
+  } else {
+    L.push(`- Soft: ${adrFmt(conUsed)}`);
+  }
+  L.push(`- Mid: ${adrFmt(cen)}`);
+  L.push(`- Strong: ${adrFmt(strch)}`);
+  L.push("");
+  L.push("## Month-by-Month Projection");
+  L.push("");
+  L.push("| Month | Occ | Nights | Soft ADR | Soft Rev | Mid ADR | Mid Rev | Strong ADR | Strong Rev |");
+  L.push("|-------|----:|-------:|---------:|---------:|--------:|--------:|-----------:|-----------:|");
+  for (let i = 0; i < MONTHS.length; i++) {
+    const c = con.rows[i], m = cenS.rows[i], s = strS.rows[i];
+    L.push(
+      `| ${c.month} | ${occFmt(c.occupancy)} | ${nightsFmt(c.nights)} | ` +
+      `${adrFmt(c.adr)} | ${money(c.revenue)} | ` +
+      `${adrFmt(m.adr)} | ${money(m.revenue)} | ` +
+      `${adrFmt(s.adr)} | ${money(s.revenue)} |`
+    );
+  }
+  L.push(`| **TOTAL** | | | | **${money(con.total)}** | | **${money(cenS.total)}** | | **${money(strS.total)}** |`);
+  L.push("");
+  L.push("## Standard Communication (Framework Section 7)");
+  L.push("");
+  L.push(`> ${paragraph}`);
+  L.push("");
+  L.push("## Context");
+  L.push("");
+  L.push("- Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.");
+  L.push("- Modeled on a mature listing with 3+ years of established reviews.");
+  L.push("- Framework v" + FRAMEWORK_VERSION + " (locked ratios; pending year-end validation per Section 10).");
+  L.push("");
+  return L.join("\n");
+}
+
+function downloadMarkdown() {
+  if (!lastState) return;
+  const md = buildMarkdown(lastState);
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `projection_${sanitizeFilename(lastState.label)}_${todayYmd()}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ---------------------------------------------------------------------------
+// Form handling
+// ---------------------------------------------------------------------------
+const form = document.getElementById("proj-form");
+const err = document.getElementById("err");
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  err.textContent = "";
+
+  const label = document.getElementById("label").value.trim();
+  const bucket = document.getElementById("bucket").value;
+  const useCase = document.getElementById("use_case").value;
+  const cenRaw = document.getElementById("peak_central").value.trim();
+  const conRaw = document.getElementById("peak_conservative").value.trim();
+  const strRaw = document.getElementById("peak_stretch").value.trim();
+
+  if (!label) return (err.textContent = "Property label is required.");
+  if (!ADR_RATIOS[bucket]) return (err.textContent = "Select a valid bedroom bucket.");
+  if (useCase !== "owner_onboarding" && useCase !== "acquisition_underwriting") {
+    return (err.textContent = "Select a valid use case.");
+  }
+  const cen = Number(cenRaw);
+  if (!cenRaw || !isFinite(cen) || cen <= 0) {
+    return (err.textContent = "Mid peak ADR is required and must be a positive number.");
+  }
+  let conEntered;
+  if (conRaw === "") {
+    conEntered = cen * DEFAULT_CONSERVATIVE_MULT;
+  } else {
+    conEntered = Number(conRaw);
+    if (!isFinite(conEntered) || conEntered <= 0) {
+      return (err.textContent = "Soft peak must be a positive number (or blank).");
+    }
+  }
+  let strch;
+  if (strRaw === "") {
+    strch = cen * DEFAULT_STRETCH_MULT;
+  } else {
+    strch = Number(strRaw);
+    if (!isFinite(strch) || strch <= 0) {
+      return (err.textContent = "Strong peak must be a positive number (or blank).");
+    }
+  }
+  const haircut = useCase === "acquisition_underwriting";
+  const conUsed = haircut ? conEntered * UNDERWRITING_CONSERVATIVE_HAIRCUT : conEntered;
+
+  render({ label, bucket, useCase, conEntered, conUsed, cen, strch, haircut });
+});
+
+form.addEventListener("reset", () => {
+  err.textContent = "";
+  document.getElementById("output").classList.remove("visible");
+  lastState = null;
+});
+
+document.getElementById("download-md").addEventListener("click", downloadMarkdown);
+document.getElementById("download-png").addEventListener("click", downloadChartPNG);
+document.getElementById("copy-png").addEventListener("click", copyChartPNG);
+document.getElementById("copy-para").addEventListener("click", async () => {
+  const text = document.getElementById("paragraph").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById("copy-para");
+    const old = btn.textContent;
+    btn.textContent = "Copied ✓";
+    setTimeout(() => (btn.textContent = old), 1200);
+  } catch {
+    alert("Copy failed — select and copy manually.");
+  }
+});
+</script>
+</body>
+</html>
