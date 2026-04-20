@@ -17,9 +17,10 @@ venv/
 .env
 .env.local
 
-# Generated projection outputs (markdown + PNG)
+# Generated projection outputs (markdown + PNG + Excel)
 projection_*.md
 chart_*.png
+projection_*.xlsx
 
 # Source PDFs held elsewhere — keep them out even if dropped here accidentally
 GW_Revenue_Projection_Framework_*.pdf
