@@ -1023,7 +1023,7 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   const bookingFeeDecimal = (bookingFeePct / 100).toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
   ws.mergeCells("A27:D27");
   const c27 = ws.getCell("A27");
-  c27.value = "Website & Advertising Costs";
+  c27.value = `Website & Advertising Costs (Estimated average of ${bookingFeePct}%, varies depending on platform)`;
   c27.font = XLSX_STYLES.normal10;
   [["E27", `-E24*${bookingFeeDecimal}`],
    ["G27", `-G24*${bookingFeeDecimal}`],
