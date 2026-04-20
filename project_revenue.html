@@ -981,13 +981,16 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   // ---- Row 23: Turnover Charge Collected from Guest ---------------------
   ws.mergeCells("A23:D23");
   const c23 = ws.getCell("A23");
-  c23.value = "Total Annual Turnover Charge Collected from Guest  (across approximately 20 guest stays)";
+  c23.value = "Total Annual Turnover Charges Collected from Guest  (across approximately 20 guest stays, includes cleaning, linen wash/dry/fold, home stocking and home inspection)";
   c23.font = XLSX_STYLES.normal10;
+  c23.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  ws.getRow(23).height = 42;
   ["E23", "G23", "I23"].forEach((addr) => {
     const cell = ws.getCell(addr);
     cell.value = Math.round(turnover * 20);
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.normal10;
+    cell.alignment = { vertical: "middle" };
   });
 
   // ---- Row 24: Total Paid by Guest --------------------------------------
