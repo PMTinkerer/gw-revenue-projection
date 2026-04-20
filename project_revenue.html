@@ -742,6 +742,101 @@ function downloadMarkdown() {
 }
 
 // ---------------------------------------------------------------------------
+// Excel export (ExcelJS)
+// ---------------------------------------------------------------------------
+const XLSX_STYLES = {
+  // Fills
+  headerNavy:    { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F3864" } },
+  sectionBlue:   { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E2F3" } },
+  subtotalBlue:  { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8EEF7" } },
+  netGreen:      { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8E0C8" } },
+  editableCyan:  { type: "pattern", pattern: "solid", fgColor: { argb: "FFDAEEF3" } },
+  // Fonts
+  whiteBold10:   { bold: true, size: 10, color: { argb: "FFFFFFFF" } },
+  bold10:        { bold: true, size: 10 },
+  bold11:        { bold: true, size: 11 },
+  bold14:        { bold: true, size: 14 },
+  normal10:      { bold: false, size: 10 },
+  italic9:       { italic: true, size: 9 },
+  // Number formats
+  fmtCurrency:   '"$"#,##0;"($"#,##0");""$-"',
+  fmtAdr:        '"$"#,##0',
+  fmtPct0:       "0%",
+  fmtPct1:       "0.0%",
+  fmtNights:     "0.0",
+};
+
+// Map the bedroom bucket key to a sheet-name-safe label.
+function bucketSheetName(bucket) {
+  // Excel sheet names can't contain: : \ / ? * [ ]  and must be <= 31 chars.
+  switch (bucket) {
+    case "1-2br": return "1-2 Bedroom";
+    case "3br":   return "3-Bedroom";
+    case "4br":   return "4-Bedroom";
+    case "5+br":  return "5+ Bedroom";
+    default:      return "Projection";
+  }
+}
+
+// Return the N-Bedroom phrase used in titles ("3-Bedroom", "5+ Bedroom", etc.).
+function bucketTitlePhrase(bucket) {
+  return bucketSheetName(bucket);
+}
+
+function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
+  const { label, bucket, _computed } = state;
+  const { con, cenS, strS } = _computed;
+  const sheetName = bucketSheetName(bucket);
+  const titlePhrase = bucketTitlePhrase(bucket);
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "GW Revenue Projection Tool";
+  wb.created = new Date();
+  const ws = wb.addWorksheet(sheetName);
+
+  // Column widths (match reference)
+  ws.columns = [
+    { width: 52 },    // A
+    { width: 11 },    // B
+    { width: 9 },     // C (default-ish)
+    { width: 12 },    // D
+    { width: 13 },    // E
+    { width: 12 },    // F
+    { width: 14.33 }, // G
+    { width: 12 },    // H
+    { width: 16.66 }, // I
+  ];
+
+  // ---- Row 1: Title ------------------------------------------------------
+  ws.mergeCells("A1:I1");
+  const c1 = ws.getCell("A1");
+  c1.value = `${label} – ${titlePhrase} Revenue Projection`;
+  c1.font = { bold: true, size: 14 };
+  c1.alignment = { horizontal: "left", vertical: "middle" };
+
+  // ---- Row 2: Subtitle ---------------------------------------------------
+  ws.mergeCells("A2:I2");
+  const c2 = ws.getCell("A2");
+  c2.value = "Year 3+ Projection | May – October Season  |  Base / Strong / High Market Scenarios";
+  c2.font = { bold: true, size: 10 };
+  c2.alignment = { horizontal: "left", vertical: "middle" };
+
+  // ---- Row 4: Projection table header -----------------------------------
+  const hdr = ["Month", "Occ", "Nights", "Base ADR", "Base Revenue",
+               "Strong ADR", "Strong Revenue", "High ADR", "High Revenue"];
+  const r4 = ws.getRow(4);
+  hdr.forEach((h, i) => {
+    const cell = r4.getCell(i + 1);
+    cell.value = h;
+    cell.font = XLSX_STYLES.whiteBold10;
+    cell.fill = XLSX_STYLES.headerNavy;
+    cell.alignment = { horizontal: i === 0 ? "left" : "right", vertical: "middle" };
+  });
+
+  return wb;
+}
+
+// ---------------------------------------------------------------------------
 // Form handling
 // ---------------------------------------------------------------------------
 const form = document.getElementById("proj-form");
