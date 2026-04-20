@@ -97,7 +97,7 @@ def compare(exported: pathlib.Path) -> list[str]:
         ("E22", "formula_eq", "=E11"),
         ("G22", "formula_eq", "=G11"),
         ("I22", "formula_eq", "=I11"),
-        ("E23", "value_eq", 5500),
+        ("E23", "value_eq", 3850),   # 275 per turn * 14 stays
         ("E24", "formula_eq", "=E22+E23"),
         ("E27", "formula_eq", "=-E24*0.165"),
         ("E29", "formula_eq", "=-E23"),

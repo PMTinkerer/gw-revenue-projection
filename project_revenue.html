@@ -115,9 +115,9 @@
         </div>
 
         <div>
-          <label for="turnover_charge">Turnover Charge per Turn ($)</label>
+          <label for="turnover_charge">Turnover Cost per Turn ($)</label>
           <input id="turnover_charge" type="number" step="1" min="0" placeholder="e.g. 275" />
-          <div class="hint">Per-turn cost charged to each guest stay. Multiplied by 20 stays for the season in the Excel export. Required for Excel export.</div>
+          <div class="hint">Per-turn cost charged to each guest stay. Multiplied by ~14 stays for the season in the Excel export. Required for Excel export.</div>
         </div>
 
         <div>
@@ -197,7 +197,7 @@
         <button id="download-png" type="button" class="primary">Download chart PNG</button>
         <button id="copy-png" type="button">Copy image to clipboard</button>
         <button id="download-xlsx" type="button" class="primary" disabled
-                title="Enter a turnover charge to enable Excel export.">Download Excel</button>
+                title="Enter a turnover cost to enable Excel export.">Download Excel</button>
       </div>
       <div class="footer-note">
         Chart modeled on a mature listing with 3+ years of established reviews.
@@ -761,6 +761,7 @@ const XLSX_STYLES = {
   italic9:       { italic: true, size: 9 },
   // Number formats
   fmtCurrency:   '"$"#,##0;("$"#,##0);"$-"',
+  fmtCurrencyApprox: '"~$"#,##0;("~$"#,##0);"~$-"',
   fmtAdr:        '"$"#,##0',
   fmtPct0:       "0%",
   fmtPct1:       "0.0%",
@@ -983,16 +984,16 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   const c23 = ws.getCell("A23");
   c23.value = {
     richText: [
-      { text: "Annual Turnover Fees Collected from Guests ", font: { size: 10 } },
-      { text: "(~20 stays; cleaning, linen, stocking, inspection)", font: { size: 10, italic: true } },
+      { text: "Estimated Annual Turnover Costs Collected from Guests ", font: { size: 10 } },
+      { text: "(~14 stays; cleaning, linen, stocking, inspection)", font: { size: 10, italic: true } },
     ],
   };
   c23.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
   ws.getRow(23).height = 30;
   ["E23", "G23", "I23"].forEach((addr) => {
     const cell = ws.getCell(addr);
-    cell.value = Math.round(turnover * 20);
-    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.value = Math.round(turnover * 14);
+    cell.numFmt = XLSX_STYLES.fmtCurrencyApprox;
     cell.font = XLSX_STYLES.normal10;
     cell.alignment = { vertical: "middle" };
   });
@@ -1226,7 +1227,7 @@ function refreshExcelButtonState() {
   btn.disabled = !(turnoverOk && projectionReady);
   btn.title = btn.disabled
     ? (projectionReady
-        ? "Enter a turnover charge to enable Excel export."
+        ? "Enter a turnover cost to enable Excel export."
         : "Run a projection first.")
     : "";
 }
