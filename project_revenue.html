@@ -137,9 +137,9 @@
           <thead>
             <tr>
               <th>Month</th><th>Occ</th><th>Nights</th>
-              <th>Soft ADR</th><th>Soft Rev</th>
-              <th>Mid ADR</th><th>Mid Rev</th>
+              <th>Base ADR</th><th>Base Rev</th>
               <th>Strong ADR</th><th>Strong Rev</th>
+              <th>High ADR</th><th>High Rev</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -181,7 +181,7 @@
       </div>
       <div class="footer-note">
         Chart modeled on a mature listing with 3+ years of established reviews.
-        Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.
+        Base · Strong · High reflect market-condition scenarios — not forecasts or commitments.
       </div>
     </div>
   </section>
@@ -420,7 +420,7 @@ function drawChartTo(canvas, state) {
 
   ctx.fillStyle = PALETTE.textSoft;
   ctx.font = '400 26px "Helvetica Neue", Helvetica, Arial, sans-serif';
-  const subtitle = `${bucket.toUpperCase()} home  ·  Soft / Mid / Strong market scenarios`;
+  const subtitle = `${bucket.toUpperCase()} home  ·  Base / Strong / High market scenarios`;
   ctx.fillText(subtitle, 70, 120);
 
   // Gold accent bar under title
@@ -479,9 +479,9 @@ function drawChartTo(canvas, state) {
   // --- Legend (inside chart box, top) --------------------------------------
   const legendY = chartBoxY + 20;
   const legendItems = [
-    { label: "Soft",   color: PALETTE.brandLight },
-    { label: "Mid",    color: PALETTE.brand },
-    { label: "Strong", color: PALETTE.brandDark },
+    { label: "Base",   color: PALETTE.brandLight },
+    { label: "Strong", color: PALETTE.brand },
+    { label: "High",   color: PALETTE.brandDark },
   ];
   ctx.textBaseline = "middle";
   ctx.font = '600 22px "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -564,9 +564,9 @@ function drawChartTo(canvas, state) {
   ctx.fillText("MAY – OCT TOTALS", sidebarX, sidebarY);
 
   const cards = [
-    { label: "Soft",   value: con.total,  fg: PALETTE.brandDark, bg: PALETTE.brandLight },
-    { label: "Mid",    value: cenS.total, fg: "#FFFFFF",         bg: PALETTE.brand },
-    { label: "Strong", value: strS.total, fg: "#FFFFFF",         bg: PALETTE.brandDark },
+    { label: "Base",   value: con.total,  fg: PALETTE.brandDark, bg: PALETTE.brandLight },
+    { label: "Strong", value: cenS.total, fg: "#FFFFFF",         bg: PALETTE.brand },
+    { label: "High",   value: strS.total, fg: "#FFFFFF",         bg: PALETTE.brandDark },
   ];
   const cardGap = 18;
   const cardAreaTop = sidebarY + 44;
@@ -600,7 +600,7 @@ function drawChartTo(canvas, state) {
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
   ctx.fillText(
-    "Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.",
+    "Base · Strong · High reflect market-condition scenarios — not forecasts or commitments.",
     70, H - 48
   );
 
@@ -671,18 +671,18 @@ function buildMarkdown(state) {
   L.push("## Peak Jul/Aug ADR Inputs");
   L.push("");
   if (haircut) {
-    L.push(`- Soft: ${adrFmt(conEntered)} entered → **${adrFmt(conUsed)} used** ` +
+    L.push(`- Base: ${adrFmt(conEntered)} entered → **${adrFmt(conUsed)} used** ` +
            `(acquisition_underwriting 10% haircut applied per Section 7)`);
   } else {
-    L.push(`- Soft: ${adrFmt(conUsed)}`);
+    L.push(`- Base: ${adrFmt(conUsed)}`);
   }
-  L.push(`- Mid: ${adrFmt(cen)}`);
-  L.push(`- Strong: ${adrFmt(strch)}`);
+  L.push(`- Strong: ${adrFmt(cen)}`);
+  L.push(`- High: ${adrFmt(strch)}`);
   L.push("");
   L.push("## Month-by-Month Projection");
   L.push("");
-  L.push("| Month | Occ | Nights | Soft ADR | Soft Rev | Mid ADR | Mid Rev | Strong ADR | Strong Rev |");
-  L.push("|-------|----:|-------:|---------:|---------:|--------:|--------:|-----------:|-----------:|");
+  L.push("| Month | Occ | Nights | Base ADR | Base Rev | Strong ADR | Strong Rev | High ADR | High Rev |");
+  L.push("|-------|----:|-------:|---------:|---------:|-----------:|-----------:|---------:|---------:|");
   for (let i = 0; i < MONTHS.length; i++) {
     const c = con.rows[i], m = cenS.rows[i], s = strS.rows[i];
     L.push(
@@ -700,7 +700,7 @@ function buildMarkdown(state) {
   L.push("");
   L.push("## Context");
   L.push("");
-  L.push("- Soft · Mid · Strong reflect market-condition scenarios — not forecasts or commitments.");
+  L.push("- Base · Strong · High reflect market-condition scenarios — not forecasts or commitments.");
   L.push("- Modeled on a mature listing with 3+ years of established reviews.");
   L.push("- Framework v" + FRAMEWORK_VERSION + " (locked ratios; pending year-end validation per Section 10).");
   L.push("");
