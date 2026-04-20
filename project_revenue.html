@@ -113,6 +113,24 @@
           <input id="peak_stretch" type="number" step="1" min="1" placeholder="blank = 130% of Mid" />
           <div class="hint">Optional. Defaults to 130% of Mid.</div>
         </div>
+
+        <div>
+          <label for="turnover_charge">Turnover Charge ($)</label>
+          <input id="turnover_charge" type="number" step="1" min="0" placeholder="e.g. 5500" />
+          <div class="hint">Total seasonal turnover cost collected from guests. Required for Excel export.</div>
+        </div>
+
+        <div>
+          <label for="booking_fee_pct">Booking Fee (%)</label>
+          <input id="booking_fee_pct" type="number" step="0.1" min="0" max="100" value="16.5" />
+          <div class="hint">Airbnb, VRBO, Meta Ads, and card processors. Default 16.5%.</div>
+        </div>
+
+        <div>
+          <label for="mgmt_rate_pct">Management Rate (%)</label>
+          <input id="mgmt_rate_pct" type="number" step="0.1" min="0" max="100" value="20.0" />
+          <div class="hint">Grand Welcome's share of rental profit. Default 20%.</div>
+        </div>
       </div>
 
       <div class="actions">
