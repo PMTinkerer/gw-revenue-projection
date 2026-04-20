@@ -1088,6 +1088,82 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
     cell.fill = XLSX_STYLES.subtotalBlue;
   });
 
+  // ---- Row 35: GRAND WELCOME MANAGEMENT (section header) ----------------
+  ws.mergeCells("A35:F35");
+  const c35 = ws.getCell("A35");
+  c35.value = "GRAND WELCOME MANAGEMENT";
+  c35.font = XLSX_STYLES.bold10;
+  c35.fill = XLSX_STYLES.sectionBlue;
+  c35.alignment = { horizontal: "left", vertical: "middle" };
+  for (let col = 7; col <= 9; col++) {
+    ws.getCell(35, col).fill = XLSX_STYLES.sectionBlue;
+  }
+
+  // ---- Row 36: Management Rate line (label reads $G$13 via TEXT) --------
+  ws.mergeCells("A36:F36");
+  const c36 = ws.getCell("A36");
+  c36.value = { formula: '"Management Rate  ("&TEXT($G$13,"0%")&" of rental profit)"' };
+  c36.font = XLSX_STYLES.normal10;
+  [["G36", "-(G33)*$G$13"], ["H36", "-(H33)*$G$13"], ["I36", "-(I33)*$G$13"]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.normal10;
+  });
+
+  // ---- Row 37: Explainer footnote (management rate) ---------------------
+  ws.mergeCells("A37:I37");
+  const c37 = ws.getCell("A37");
+  c37.value = "     \u2193 Like any business, the home covers its operating costs first. " +
+              "What remains is rental profit \u2014 shared between the homeowner and Grand Welcome " +
+              "for managing the property (marketing, booking management, guest communication, " +
+              "pricing optimization, owner reporting, 24/7 operational support). " +
+              "The majority flows to the homeowner.";
+  c37.font = XLSX_STYLES.italic9;
+  c37.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+
+  // ---- Row 39: NET TO HOMEOWNER -----------------------------------------
+  ws.mergeCells("A39:F39");
+  const c39 = ws.getCell("A39");
+  c39.value = "NET TO HOMEOWNER";
+  c39.font = XLSX_STYLES.bold11;
+  c39.fill = XLSX_STYLES.netGreen;
+  c39.alignment = { horizontal: "left", vertical: "middle" };
+  [["G39", "G33+G36"], ["H39", "H33+H36"], ["I39", "I33+I36"]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.bold11;
+    cell.fill = XLSX_STYLES.netGreen;
+  });
+
+  // ---- Row 42: HOW TO READ THIS REPORT (section header) -----------------
+  ws.mergeCells("A42:I42");
+  const c42 = ws.getCell("A42");
+  c42.value = "HOW TO READ THIS REPORT";
+  c42.font = XLSX_STYLES.bold10;
+  c42.fill = XLSX_STYLES.sectionBlue;
+  c42.alignment = { horizontal: "left", vertical: "middle" };
+
+  // ---- Row 43: How-to-read body paragraph -------------------------------
+  ws.mergeCells("A43:I43");
+  const c43 = ws.getCell("A43");
+  c43.value =
+    "The Base / Strong / High columns represent three realistic seasonal outcomes for this " +
+    "home, once the listing is established which is generally year 3+. Strong is our best " +
+    "point estimate based on comparable homes in our portfolio and current market demand. " +
+    "Base reflects a conservative downside if the nightly rate comes in softer than expected. " +
+    "High reflects upside in line with our top comparable properties.\n\n" +
+    "Every  vacation rental pays two categories of operating costs: costs charged by the " +
+    "booking platforms (Airbnb, VRBO, Meta Ads, card processors) and costs charged by the " +
+    "vendors who service the home between guests (cleaners, inspectors, stocking). Both are " +
+    "charged directly to guests at the time of booking.\n\n" +
+    "What remains is rental profit \u2014 shared between the homeowner and Grand Welcome under " +
+    "the terms of the management agreement.";
+  c43.font = XLSX_STYLES.italic9;
+  c43.alignment = { horizontal: "left", vertical: "top", wrapText: true };
+  ws.getRow(43).height = 120;
+
   return wb;
 }
 
