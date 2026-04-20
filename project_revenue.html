@@ -123,8 +123,8 @@
 
         <div>
           <label for="booking_fee_pct">Booking Fee (%)</label>
-          <input id="booking_fee_pct" type="number" step="0.1" min="0" max="100" value="16.5" />
-          <div class="hint">Airbnb, VRBO, Meta Ads, and card processors. Default 16.5%.</div>
+          <input id="booking_fee_pct" type="number" step="0.1" min="0" max="100" value="10" />
+          <div class="hint">Airbnb, VRBO, Meta Ads, and card processors. Default 10%.</div>
         </div>
 
         <div>
@@ -1037,9 +1037,9 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   // ---- Row 28: Explainer footnote (Website/Advertising) -----------------
   ws.mergeCells("A28:I28");
   const c28 = ws.getCell("A28");
-  c28.value = "     ↳ Charged by Airbnb, VRBO, and Meta Ads, plus credit card processors. " +
-              "A standard cost of booking a vacation rental on any major platform — " +
-              "applies to every property listed on these channels, regardless of who manages it.";
+  c28.value = "     ↳ Charged directly by the booking platforms (Airbnb, VRBO), Meta Ads, and credit card processors. " +
+              "Rates vary by channel. These are standard industry fees paid by every vacation rental listed on these platforms, " +
+              "regardless of who manages the property.";
   c28.font = XLSX_STYLES.italic9;
   c28.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
   ws.getRow(28).height = 28;
@@ -1187,7 +1187,7 @@ async function downloadExcel() {
     return;
   }
   const bookingFeeRaw = document.getElementById("booking_fee_pct").value.trim();
-  const bookingFeePct = bookingFeeRaw === "" ? 16.5 : Number(bookingFeeRaw);
+  const bookingFeePct = bookingFeeRaw === "" ? 10 : Number(bookingFeeRaw);
   if (!isFinite(bookingFeePct) || bookingFeePct < 0 || bookingFeePct > 100) {
     alert("Booking Fee must be a percentage between 0 and 100.");
     return;
