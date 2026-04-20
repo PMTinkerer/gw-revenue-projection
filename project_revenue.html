@@ -53,7 +53,8 @@
   tfoot td { font-weight: 700; border-top: 2px solid var(--fg); border-bottom: none; }
   .scroll-x { overflow-x: auto; }
   blockquote { margin: 0; padding: 12px 14px; border-left: 3px solid var(--accent);
-    background: #f0fdfa; color: #064e3b; font-size: 14px; border-radius: 0 6px 6px 0; }
+    background: #f0fdfa; color: #064e3b; font-size: 14px; border-radius: 0 6px 6px 0;
+    white-space: pre-wrap; }
   .footer-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
   h2 { font-size: 16px; margin: 18px 0 10px; }
   .output { display: none; }
@@ -344,13 +345,10 @@ function render(state) {
   document.getElementById("total_str").textContent = money(strS.total);
 
   const para =
-    `Based on comparable homes in our portfolio and current market demand data, ` +
-    `and assuming the owner provides full rental availability in peak summer, ` +
-    `we project ${money(cenS.total)} for May through October. ` +
-    `If the nightly rate comes in softer than expected you're looking at ` +
-    `${money(con.total)}; if the home performs like our stronger comps you ` +
-    `could see ${money(strS.total)}. July and August are the most predictable ` +
-    `months because we consistently fill peak weeks when availability is open.`;
+    `Two documents attached: our sales FAQ and an income projection I built for your home.\n\n` +
+    `A few notes on the projection. These numbers reflect a mature listing, which typically takes 2 to 3 years of booking history to reach, so year one will come in below this target. Annual demand also swings more than most people expect, so any given year can land above or below.\n\n` +
+    `I've included the booking platform fees (Airbnb, VRBO, and Booking.com charge everyone who lists) along with a ballpark turnover cost. On turnover we handle everything, cleaning, linen wash/dry/fold, an independent inspection, and all linens are provided by us so you don't buy or replace them yourself. All of it gets covered by the turnover fee charged directly to the guest, which is finalized once we have cleaner quotes and stocking priced out during onboarding. The turnover costs don't impact your income projection for that reason, but I included it so you can see how it works.\n\n` +
+    `Happy to walk through any of it on a call.`;
   document.getElementById("paragraph").textContent = para;
 
   document.getElementById("output").classList.add("visible");
@@ -717,7 +715,7 @@ function buildMarkdown(state) {
   L.push("");
   L.push("## Standard Communication (Framework Section 7)");
   L.push("");
-  L.push(`> ${paragraph}`);
+  paragraph.split("\n").forEach((line) => L.push(line === "" ? ">" : `> ${line}`));
   L.push("");
   L.push("## Context");
   L.push("");
