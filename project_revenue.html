@@ -1004,6 +1004,90 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
     cell.fill = XLSX_STYLES.subtotalBlue;
   });
 
+  // ---- Row 26: OPERATING COSTS (section header) -------------------------
+  ws.mergeCells("A26:F26");
+  const c26 = ws.getCell("A26");
+  c26.value = "OPERATING COSTS   (Charged to Guests, Paid to Third Parties)";
+  c26.font = XLSX_STYLES.bold10;
+  c26.fill = XLSX_STYLES.sectionBlue;
+  c26.alignment = { horizontal: "left", vertical: "middle" };
+  for (let col = 7; col <= 9; col++) {
+    ws.getCell(26, col).fill = XLSX_STYLES.sectionBlue;
+  }
+
+  // ---- Row 27: Website & Advertising Costs ------------------------------
+  const bookingFeeDecimal = (bookingFeePct / 100).toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+  ws.mergeCells("A27:F27");
+  const c27 = ws.getCell("A27");
+  c27.value = "Website & Advertising Costs";
+  c27.font = XLSX_STYLES.normal10;
+  [["G27", `-G24*${bookingFeeDecimal}`],
+   ["H27", `-H24*${bookingFeeDecimal}`],
+   ["I27", `-I24*${bookingFeeDecimal}`]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.normal10;
+  });
+
+  // ---- Row 28: Explainer footnote (Website/Advertising) -----------------
+  ws.mergeCells("A28:I28");
+  const c28 = ws.getCell("A28");
+  c28.value = "     ↳ Charged by Airbnb, VRBO, and Meta Ads, plus credit card processors. " +
+              "A standard cost of booking a vacation rental on any major platform — " +
+              "applies to every property listed on these channels, regardless of who manages it.";
+  c28.font = XLSX_STYLES.italic9;
+  c28.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+
+  // ---- Row 29: Turnover Costs -------------------------------------------
+  ws.mergeCells("A29:F29");
+  const c29 = ws.getCell("A29");
+  c29.value = "Turnover Costs";
+  c29.font = XLSX_STYLES.normal10;
+  [["G29", "-G23"], ["H29", "-H23"], ["I29", "-I23"]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.normal10;
+  });
+
+  // ---- Row 30: Explainer footnote (Turnover) ----------------------------
+  ws.mergeCells("A30:I30");
+  const c30 = ws.getCell("A30");
+  c30.value = "     ↳ Charged by the vendors who service the home between guests — " +
+              "cleaners, inspectors, and stocking services. " +
+              "A standard cost of any professionally operated vacation rental.";
+  c30.font = XLSX_STYLES.italic9;
+  c30.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+
+  // ---- Row 31: Total Operating Costs ------------------------------------
+  ws.mergeCells("A31:F31");
+  const c31 = ws.getCell("A31");
+  c31.value = "Total Operating Costs";
+  c31.font = XLSX_STYLES.bold10;
+  c31.fill = XLSX_STYLES.subtotalBlue;
+  [["G31", "G27+G29"], ["H31", "H27+H29"], ["I31", "I27+I29"]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.bold10;
+    cell.fill = XLSX_STYLES.subtotalBlue;
+  });
+
+  // ---- Row 33: Rental Profit --------------------------------------------
+  ws.mergeCells("A33:F33");
+  const c33 = ws.getCell("A33");
+  c33.value = "Rental Profit   (what remains after the home's operating costs)";
+  c33.font = XLSX_STYLES.bold10;
+  c33.fill = XLSX_STYLES.subtotalBlue;
+  [["G33", "G24+G31"], ["H33", "H24+H31"], ["I33", "I24+I31"]].forEach(([addr, f]) => {
+    const cell = ws.getCell(addr);
+    cell.value = { formula: f };
+    cell.numFmt = XLSX_STYLES.fmtCurrency;
+    cell.font = XLSX_STYLES.bold10;
+    cell.fill = XLSX_STYLES.subtotalBlue;
+  });
+
   return wb;
 }
 
