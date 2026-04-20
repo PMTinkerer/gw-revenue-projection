@@ -358,6 +358,7 @@ function render(state) {
 
   state._computed = { con, cenS, strS, paragraph: para };
 
+  refreshExcelButtonState();
   renderChart(state);
 }
 
@@ -1167,6 +1168,61 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   return wb;
 }
 
+async function downloadExcel() {
+  if (!lastState || !lastState._computed) return;
+  if (typeof ExcelJS === "undefined") {
+    alert("Excel library failed to load — check your internet connection and refresh.");
+    return;
+  }
+  const turnoverRaw = document.getElementById("turnover_charge").value.trim();
+  const turnover = Number(turnoverRaw);
+  if (turnoverRaw === "" || !isFinite(turnover) || turnover < 0) {
+    alert("Enter a non-negative Turnover Charge to export.");
+    return;
+  }
+  const bookingFeeRaw = document.getElementById("booking_fee_pct").value.trim();
+  const bookingFeePct = bookingFeeRaw === "" ? 16.5 : Number(bookingFeeRaw);
+  if (!isFinite(bookingFeePct) || bookingFeePct < 0 || bookingFeePct > 100) {
+    alert("Booking Fee must be a percentage between 0 and 100.");
+    return;
+  }
+  const mgmtRaw = document.getElementById("mgmt_rate_pct").value.trim();
+  const mgmtRatePct = mgmtRaw === "" ? 20.0 : Number(mgmtRaw);
+  if (!isFinite(mgmtRatePct) || mgmtRatePct < 0 || mgmtRatePct > 100) {
+    alert("Management Rate must be a percentage between 0 and 100.");
+    return;
+  }
+
+  const wb = buildWorkbook(lastState, turnover, bookingFeePct, mgmtRatePct);
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `projection_${sanitizeFilename(lastState.label)}_${todayYmd()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function refreshExcelButtonState() {
+  const btn = document.getElementById("download-xlsx");
+  if (!btn) return;
+  const turnoverRaw = document.getElementById("turnover_charge").value.trim();
+  const turnover = Number(turnoverRaw);
+  const turnoverOk = turnoverRaw !== "" && isFinite(turnover) && turnover >= 0;
+  const projectionReady = !!(lastState && lastState._computed);
+  btn.disabled = !(turnoverOk && projectionReady);
+  btn.title = btn.disabled
+    ? (projectionReady
+        ? "Enter a turnover charge to enable Excel export."
+        : "Run a projection first.")
+    : "";
+}
+
 // ---------------------------------------------------------------------------
 // Form handling
 // ---------------------------------------------------------------------------
@@ -1221,11 +1277,14 @@ form.addEventListener("reset", () => {
   err.textContent = "";
   document.getElementById("output").classList.remove("visible");
   lastState = null;
+  refreshExcelButtonState();
 });
 
 document.getElementById("download-md").addEventListener("click", downloadMarkdown);
 document.getElementById("download-png").addEventListener("click", downloadChartPNG);
 document.getElementById("copy-png").addEventListener("click", copyChartPNG);
+document.getElementById("download-xlsx").addEventListener("click", downloadExcel);
+document.getElementById("turnover_charge").addEventListener("input", refreshExcelButtonState);
 document.getElementById("copy-para").addEventListener("click", async () => {
   const text = document.getElementById("paragraph").textContent;
   try {
