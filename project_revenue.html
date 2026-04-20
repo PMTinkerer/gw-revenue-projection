@@ -115,9 +115,9 @@
         </div>
 
         <div>
-          <label for="turnover_charge">Turnover Charge ($)</label>
-          <input id="turnover_charge" type="number" step="1" min="0" placeholder="e.g. 5500" />
-          <div class="hint">Total seasonal turnover cost collected from guests. Required for Excel export.</div>
+          <label for="turnover_charge">Turnover Charge per Turn ($)</label>
+          <input id="turnover_charge" type="number" step="1" min="0" placeholder="e.g. 275" />
+          <div class="hint">Per-turn cost charged to each guest stay. Multiplied by 20 stays for the season in the Excel export. Required for Excel export.</div>
         </div>
 
         <div>
@@ -985,7 +985,7 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   c23.font = XLSX_STYLES.normal10;
   ["E23", "G23", "I23"].forEach((addr) => {
     const cell = ws.getCell(addr);
-    cell.value = Math.round(turnover);
+    cell.value = Math.round(turnover * 20);
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.normal10;
   });

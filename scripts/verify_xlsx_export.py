@@ -30,7 +30,7 @@ FORM_INPUTS = {
     "peak_central": "1000",
     "peak_conservative": "800",
     "peak_stretch": "1300",
-    "turnover_charge": "5500",
+    "turnover_charge": "275",
     "booking_fee_pct": "16.5",
     "mgmt_rate_pct": "20.0",
 }
