@@ -942,37 +942,36 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   c18.font = { size: 10 };
 
   // ---- Row 20: Pro Forma column headers ---------------------------------
+  // Value columns align with the top block: E = Base, G = Strong, I = High.
   const r20 = ws.getRow(20);
   r20.getCell(1).value = "Line Item";
-  r20.getCell(1).font = XLSX_STYLES.whiteBold10;
-  r20.getCell(1).fill = XLSX_STYLES.headerNavy;
   r20.getCell(1).alignment = { horizontal: "left", vertical: "middle" };
-  const proFormaHeads = ["Base", "Strong", "High"];
-  proFormaHeads.forEach((h, i) => {
-    const cell = r20.getCell(7 + i);
-    cell.value = h;
-    cell.font = XLSX_STYLES.whiteBold10;
-    cell.fill = XLSX_STYLES.headerNavy;
-    cell.alignment = { horizontal: "right", vertical: "middle" };
-  });
+  ws.getCell("E20").value = "Base";
+  ws.getCell("E20").alignment = { horizontal: "right", vertical: "middle" };
+  ws.getCell("G20").value = "Strong";
+  ws.getCell("G20").alignment = { horizontal: "right", vertical: "middle" };
+  ws.getCell("I20").value = "High";
+  ws.getCell("I20").alignment = { horizontal: "right", vertical: "middle" };
+  // Paint navy across the entire row so the header band is continuous.
+  for (let col = 1; col <= 9; col++) {
+    r20.getCell(col).font = XLSX_STYLES.whiteBold10;
+    r20.getCell(col).fill = XLSX_STYLES.headerNavy;
+  }
 
   // ---- Row 21: GUEST PAYMENT COLLECTED (section header) -----------------
-  ws.mergeCells("A21:F21");
+  ws.mergeCells("A21:I21");
   const c21 = ws.getCell("A21");
   c21.value = "GUEST PAYMENT COLLECTED";
   c21.font = XLSX_STYLES.bold10;
   c21.fill = XLSX_STYLES.sectionBlue;
   c21.alignment = { horizontal: "left", vertical: "middle" };
-  for (let col = 7; col <= 9; col++) {
-    ws.getCell(21, col).fill = XLSX_STYLES.sectionBlue;
-  }
 
   // ---- Row 22: Nightly Rental Fare (pulls totals) -----------------------
-  ws.mergeCells("A22:F22");
+  ws.mergeCells("A22:D22");
   const c22 = ws.getCell("A22");
   c22.value = "Nightly Rental Fare";
   c22.font = XLSX_STYLES.normal10;
-  [["G22", "E11"], ["H22", "G11"], ["I22", "I11"]].forEach(([target, source]) => {
+  [["E22", "E11"], ["G22", "G11"], ["I22", "I11"]].forEach(([target, source]) => {
     const cell = ws.getCell(target);
     cell.value = { formula: source };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
@@ -980,11 +979,11 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   });
 
   // ---- Row 23: Turnover Charge Collected from Guest ---------------------
-  ws.mergeCells("A23:F23");
+  ws.mergeCells("A23:D23");
   const c23 = ws.getCell("A23");
   c23.value = "Turnover Charge Collected from Guest  (approximately 20 guest stays)";
   c23.font = XLSX_STYLES.normal10;
-  ["G23", "H23", "I23"].forEach((addr) => {
+  ["E23", "G23", "I23"].forEach((addr) => {
     const cell = ws.getCell(addr);
     cell.value = Math.round(turnover);
     cell.numFmt = XLSX_STYLES.fmtCurrency;
@@ -992,38 +991,37 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
   });
 
   // ---- Row 24: Total Paid by Guest --------------------------------------
-  ws.mergeCells("A24:F24");
+  ws.mergeCells("A24:D24");
   const c24 = ws.getCell("A24");
   c24.value = "Total Paid by Guest";
   c24.font = XLSX_STYLES.bold10;
   c24.fill = XLSX_STYLES.subtotalBlue;
-  [["G24", "G22+G23"], ["H24", "H22+H23"], ["I24", "I22+I23"]].forEach(([addr, f]) => {
+  [["E24", "E22+E23"], ["G24", "G22+G23"], ["I24", "I22+I23"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.bold10;
     cell.fill = XLSX_STYLES.subtotalBlue;
   });
+  // Paint spacer cells so the subtotal band is continuous across the row.
+  [6, 8].forEach((col) => { ws.getCell(24, col).fill = XLSX_STYLES.subtotalBlue; });
 
   // ---- Row 26: OPERATING COSTS (section header) -------------------------
-  ws.mergeCells("A26:F26");
+  ws.mergeCells("A26:I26");
   const c26 = ws.getCell("A26");
   c26.value = "OPERATING COSTS   (Charged to Guests, Paid to Third Parties)";
   c26.font = XLSX_STYLES.bold10;
   c26.fill = XLSX_STYLES.sectionBlue;
   c26.alignment = { horizontal: "left", vertical: "middle" };
-  for (let col = 7; col <= 9; col++) {
-    ws.getCell(26, col).fill = XLSX_STYLES.sectionBlue;
-  }
 
   // ---- Row 27: Website & Advertising Costs ------------------------------
   const bookingFeeDecimal = (bookingFeePct / 100).toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
-  ws.mergeCells("A27:F27");
+  ws.mergeCells("A27:D27");
   const c27 = ws.getCell("A27");
   c27.value = "Website & Advertising Costs";
   c27.font = XLSX_STYLES.normal10;
-  [["G27", `-G24*${bookingFeeDecimal}`],
-   ["H27", `-H24*${bookingFeeDecimal}`],
+  [["E27", `-E24*${bookingFeeDecimal}`],
+   ["G27", `-G24*${bookingFeeDecimal}`],
    ["I27", `-I24*${bookingFeeDecimal}`]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
@@ -1039,13 +1037,14 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
               "applies to every property listed on these channels, regardless of who manages it.";
   c28.font = XLSX_STYLES.italic9;
   c28.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  ws.getRow(28).height = 28;
 
   // ---- Row 29: Turnover Costs -------------------------------------------
-  ws.mergeCells("A29:F29");
+  ws.mergeCells("A29:D29");
   const c29 = ws.getCell("A29");
   c29.value = "Turnover Costs";
   c29.font = XLSX_STYLES.normal10;
-  [["G29", "-G23"], ["H29", "-H23"], ["I29", "-I23"]].forEach(([addr, f]) => {
+  [["E29", "-E23"], ["G29", "-G23"], ["I29", "-I23"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
@@ -1060,52 +1059,52 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
               "A standard cost of any professionally operated vacation rental.";
   c30.font = XLSX_STYLES.italic9;
   c30.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  ws.getRow(30).height = 28;
 
   // ---- Row 31: Total Operating Costs ------------------------------------
-  ws.mergeCells("A31:F31");
+  ws.mergeCells("A31:D31");
   const c31 = ws.getCell("A31");
   c31.value = "Total Operating Costs";
   c31.font = XLSX_STYLES.bold10;
   c31.fill = XLSX_STYLES.subtotalBlue;
-  [["G31", "G27+G29"], ["H31", "H27+H29"], ["I31", "I27+I29"]].forEach(([addr, f]) => {
+  [["E31", "E27+E29"], ["G31", "G27+G29"], ["I31", "I27+I29"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.bold10;
     cell.fill = XLSX_STYLES.subtotalBlue;
   });
+  [6, 8].forEach((col) => { ws.getCell(31, col).fill = XLSX_STYLES.subtotalBlue; });
 
   // ---- Row 33: Rental Profit --------------------------------------------
-  ws.mergeCells("A33:F33");
+  ws.mergeCells("A33:D33");
   const c33 = ws.getCell("A33");
   c33.value = "Rental Profit   (what remains after the home's operating costs)";
   c33.font = XLSX_STYLES.bold10;
   c33.fill = XLSX_STYLES.subtotalBlue;
-  [["G33", "G24+G31"], ["H33", "H24+H31"], ["I33", "I24+I31"]].forEach(([addr, f]) => {
+  [["E33", "E24+E31"], ["G33", "G24+G31"], ["I33", "I24+I31"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.bold10;
     cell.fill = XLSX_STYLES.subtotalBlue;
   });
+  [6, 8].forEach((col) => { ws.getCell(33, col).fill = XLSX_STYLES.subtotalBlue; });
 
   // ---- Row 35: GRAND WELCOME MANAGEMENT (section header) ----------------
-  ws.mergeCells("A35:F35");
+  ws.mergeCells("A35:I35");
   const c35 = ws.getCell("A35");
   c35.value = "GRAND WELCOME MANAGEMENT";
   c35.font = XLSX_STYLES.bold10;
   c35.fill = XLSX_STYLES.sectionBlue;
   c35.alignment = { horizontal: "left", vertical: "middle" };
-  for (let col = 7; col <= 9; col++) {
-    ws.getCell(35, col).fill = XLSX_STYLES.sectionBlue;
-  }
 
   // ---- Row 36: Management Rate line (label reads $G$13 via TEXT) --------
-  ws.mergeCells("A36:F36");
+  ws.mergeCells("A36:D36");
   const c36 = ws.getCell("A36");
   c36.value = { formula: '"Management Rate  ("&TEXT($G$13,"0%")&" of rental profit)"' };
   c36.font = XLSX_STYLES.normal10;
-  [["G36", "-(G33)*$G$13"], ["H36", "-(H33)*$G$13"], ["I36", "-(I33)*$G$13"]].forEach(([addr, f]) => {
+  [["E36", "-(E33)*$G$13"], ["G36", "-(G33)*$G$13"], ["I36", "-(I33)*$G$13"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
@@ -1122,21 +1121,23 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
               "The majority flows to the homeowner.";
   c37.font = XLSX_STYLES.italic9;
   c37.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+  ws.getRow(37).height = 52;
 
   // ---- Row 39: NET TO HOMEOWNER -----------------------------------------
-  ws.mergeCells("A39:F39");
+  ws.mergeCells("A39:D39");
   const c39 = ws.getCell("A39");
   c39.value = "NET TO HOMEOWNER";
   c39.font = XLSX_STYLES.bold11;
   c39.fill = XLSX_STYLES.netGreen;
   c39.alignment = { horizontal: "left", vertical: "middle" };
-  [["G39", "G33+G36"], ["H39", "H33+H36"], ["I39", "I33+I36"]].forEach(([addr, f]) => {
+  [["E39", "E33+E36"], ["G39", "G33+G36"], ["I39", "I33+I36"]].forEach(([addr, f]) => {
     const cell = ws.getCell(addr);
     cell.value = { formula: f };
     cell.numFmt = XLSX_STYLES.fmtCurrency;
     cell.font = XLSX_STYLES.bold11;
     cell.fill = XLSX_STYLES.netGreen;
   });
+  [6, 8].forEach((col) => { ws.getCell(39, col).fill = XLSX_STYLES.netGreen; });
 
   // ---- Row 42: HOW TO READ THIS REPORT (section header) -----------------
   ws.mergeCells("A42:I42");
