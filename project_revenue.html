@@ -833,6 +833,103 @@ function buildWorkbook(state, turnover, bookingFeePct, mgmtRatePct) {
     cell.alignment = { horizontal: i === 0 ? "left" : "right", vertical: "middle" };
   });
 
+  // ---- Rows 5-10: Monthly projection ------------------------------------
+  const MONTHS_DAYS = [
+    { m: "May", days: 31 },
+    { m: "Jun", days: 30 },
+    { m: "Jul", days: 31 },
+    { m: "Aug", days: 31 },
+    { m: "Sep", days: 30 },
+    { m: "Oct", days: 31 },
+  ];
+  for (let i = 0; i < 6; i++) {
+    const rowNum = 5 + i;
+    const r = ws.getRow(rowNum);
+    const { m, days } = MONTHS_DAYS[i];
+    // Source data (pulled from projection state, indexed 0..5).
+    const occ   = con.rows[i].occupancy;      // same across scenarios
+    const conA  = con.rows[i].adr;
+    const cenA  = cenS.rows[i].adr;
+    const strA  = strS.rows[i].adr;
+
+    r.getCell(1).value = m;
+    r.getCell(1).font = XLSX_STYLES.normal10;
+
+    r.getCell(2).value = occ;
+    r.getCell(2).numFmt = XLSX_STYLES.fmtPct0;
+    r.getCell(2).font = XLSX_STYLES.normal10;
+    r.getCell(2).alignment = { horizontal: "right" };
+
+    r.getCell(3).value = { formula: `${days}*B${rowNum}` };
+    r.getCell(3).numFmt = XLSX_STYLES.fmtNights;
+    r.getCell(3).font = XLSX_STYLES.normal10;
+    r.getCell(3).alignment = { horizontal: "right" };
+
+    // Base (Soft in the calc)
+    r.getCell(4).value = Math.round(conA);
+    r.getCell(4).numFmt = XLSX_STYLES.fmtAdr;
+    r.getCell(4).font = XLSX_STYLES.normal10;
+    r.getCell(5).value = { formula: `D${rowNum}*C${rowNum}` };
+    r.getCell(5).numFmt = XLSX_STYLES.fmtCurrency;
+    r.getCell(5).font = XLSX_STYLES.normal10;
+
+    // Strong (Mid in the calc)
+    r.getCell(6).value = Math.round(cenA);
+    r.getCell(6).numFmt = XLSX_STYLES.fmtAdr;
+    r.getCell(6).font = XLSX_STYLES.normal10;
+    r.getCell(7).value = { formula: `F${rowNum}*C${rowNum}` };
+    r.getCell(7).numFmt = XLSX_STYLES.fmtCurrency;
+    r.getCell(7).font = XLSX_STYLES.normal10;
+
+    // High (Strong in the calc)
+    r.getCell(8).value = Math.round(strA);
+    r.getCell(8).numFmt = XLSX_STYLES.fmtAdr;
+    r.getCell(8).font = XLSX_STYLES.normal10;
+    r.getCell(9).value = { formula: `H${rowNum}*C${rowNum}` };
+    r.getCell(9).numFmt = XLSX_STYLES.fmtCurrency;
+    r.getCell(9).font = XLSX_STYLES.normal10;
+  }
+
+  // ---- Row 11: TOTAL ----------------------------------------------------
+  const r11 = ws.getRow(11);
+  r11.getCell(1).value = "TOTAL";
+  r11.getCell(3).value = { formula: "SUM(C5:C10)" };
+  r11.getCell(3).numFmt = XLSX_STYLES.fmtNights;
+  r11.getCell(5).value = { formula: "SUM(E5:E10)" };
+  r11.getCell(5).numFmt = XLSX_STYLES.fmtCurrency;
+  r11.getCell(7).value = { formula: "SUM(G5:G10)" };
+  r11.getCell(7).numFmt = XLSX_STYLES.fmtCurrency;
+  r11.getCell(9).value = { formula: "SUM(I5:I10)" };
+  r11.getCell(9).numFmt = XLSX_STYLES.fmtCurrency;
+  for (let col = 1; col <= 9; col++) {
+    r11.getCell(col).font = XLSX_STYLES.bold10;
+    r11.getCell(col).fill = XLSX_STYLES.subtotalBlue;
+  }
+
+  // ---- Row 12: '(Occupancy)' helper label -------------------------------
+  ws.getCell("B12").value = "(Occupancy) ";
+  ws.getCell("B12").font = { size: 11 };
+
+  // ---- Row 13: Management Rate (single source of truth) -----------------
+  ws.mergeCells("A13:F13");
+  ws.getCell("A13").value = "Management Rate";
+  ws.getCell("A13").font = XLSX_STYLES.normal10;
+  ws.mergeCells("G13:I13");
+  const g13 = ws.getCell("G13");
+  g13.value = mgmtRatePct / 100;
+  g13.numFmt = XLSX_STYLES.fmtPct1;
+  g13.font = XLSX_STYLES.bold11;
+  g13.fill = XLSX_STYLES.editableCyan;
+  g13.alignment = { horizontal: "center", vertical: "middle" };
+
+  // ---- Row 14: Management rate explainer --------------------------------
+  ws.mergeCells("A14:I14");
+  const c14 = ws.getCell("A14");
+  c14.value = "     ↳ Grand Welcome's management rate as a percentage of rental profit. " +
+              "Adjust for this specific home's agreement.";
+  c14.font = XLSX_STYLES.italic9;
+  c14.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+
   return wb;
 }
 
