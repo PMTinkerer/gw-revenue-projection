@@ -1,8 +1,5 @@
-# Projection-log service only — the CLI (project_revenue.py) stays stdlib-only.
+# Projection-log service runtime — the CLI (project_revenue.py) stays stdlib-only.
+# Dev/test dependencies live in requirements-dev.txt.
 fastapi==0.139.0
 uvicorn==0.50.2
 aiosqlite==0.22.1
-
-# Dev/test
-pytest==9.1.1
-httpx==0.28.1
