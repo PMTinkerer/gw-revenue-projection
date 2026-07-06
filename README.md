@@ -56,7 +56,7 @@ Every "Project revenue" run in the HTML tool is saved to a small FastAPI + SQLit
 - **History:** the "History" button in the tool lists saved projections (search by address or label) and can reload any record's inputs back into the form.
 - **Offline behavior:** if the API is unreachable the run queues in localStorage and flushes on the next page load — the status chip next to the buttons always tells you whether the run was logged.
 - API: `POST /api/projections`, `GET /api/projections?q=`, `GET /api/projections/{id}`, `DELETE /api/projections/{id}` (Bearer auth), `GET /healthz`.
-- Local dev: `pip install -r requirements.txt && PROJECTIONS_API_KEY=dev uvicorn app.main:app --reload`, tests via `python3 -m pytest tests/ -v`.
+- Local dev: `pip install -r requirements-dev.txt && PROJECTIONS_API_KEY=dev uvicorn app.main:app --reload`, tests via `python3 -m pytest tests/ -v`.
 
 ## Example
 
