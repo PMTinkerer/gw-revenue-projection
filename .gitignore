@@ -28,3 +28,11 @@ GW_Revenue_Projection_Methodology_*.pdf
 
 # Claude / tooling
 .claude/
+
+# Projection log local data + benchmark cache
+data/
+.benchmark_cache/
+.planning/
+
+# Playwright session artifacts
+.playwright-cli/
