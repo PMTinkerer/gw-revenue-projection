@@ -65,7 +65,7 @@
 <main>
   <header class="page">
     <h1>Grand Welcome — May–October Revenue Projection</h1>
-    <div class="sub">Framework v1.0 · Southern Coastal Maine · locked ratios pending 2026 year-end validation</div>
+    <div class="sub">Framework v1.1 · Southern Coastal Maine · ratios recalibrated to 2025+2026 Guesty actuals (Jul 2026)</div>
   </header>
 
   <section class="card">
@@ -74,6 +74,12 @@
         <div>
           <label for="label">Property identifier / label</label>
           <input id="label" type="text" placeholder="e.g. Ocean View Cottage" required />
+        </div>
+
+        <div>
+          <label for="address">Property address</label>
+          <input id="address" type="text" placeholder="e.g. 12 Shore Rd, Wells, ME" required />
+          <div class="hint">Saved to the projection log so this run can be looked up later.</div>
         </div>
 
         <div>
@@ -100,7 +106,7 @@
         <div>
           <label for="peak_central">Peak Jul/Aug ADR — Mid ($)</label>
           <input id="peak_central" type="number" step="1" min="1" placeholder="e.g. 1000" required />
-          <div class="hint">Required. Midpoint of the market-condition range.</div>
+          <div class="hint">Required. The expected <strong>average booked nightly rate across all of July + August</strong> — not the best-week rate (best weeks run ~15% above the two-month average).</div>
         </div>
 
         <div>
@@ -137,9 +143,21 @@
       <div class="actions">
         <button type="submit" class="primary">Project revenue</button>
         <button type="reset">Reset</button>
+        <button type="button" id="history-btn">History</button>
+        <span id="log-status" class="hint" style="align-self:center"></span>
       </div>
       <div class="error" id="err"></div>
     </form>
+  </section>
+
+  <section id="history" class="card" style="display:none">
+    <h2 style="margin-top:0">Projection log</h2>
+    <div class="actions" style="margin-bottom:10px">
+      <input id="history-q" type="text" placeholder="Search address or label…" style="max-width:320px" />
+      <button type="button" id="history-refresh">Search</button>
+      <button type="button" id="history-close">Close</button>
+    </div>
+    <div id="history-list" class="hint">Loading…</div>
   </section>
 
   <section id="output" class="output">
@@ -210,18 +228,21 @@
 
 <script>
 // ---------------------------------------------------------------------------
-// v1.0 LOCKED CONSTANTS — mirror project_revenue.py.
-// Source: GW_Revenue_Projection_Framework_v1.0 (April 2026), Sections 4 & 5.
+// v1.1 LOCKED CONSTANTS — mirror project_revenue.py.
+// Source: GW_Revenue_Projection_Framework_v1.0 (April 2026), Sections 4 & 5,
+// recalibrated 2026-07-06 against 2025+2026 Guesty actuals (see README).
+// Peak ADR input = expected AVERAGE booked nightly rate across Jul+Aug,
+// not the best-week rate.
 // ---------------------------------------------------------------------------
-const FRAMEWORK_VERSION = "1.0";
+const FRAMEWORK_VERSION = "1.1";
 const MONTHS = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"];
 const DAYS_IN_MONTH = { May: 31, Jun: 30, Jul: 31, Aug: 31, Sep: 30, Oct: 31 };
 
 const ADR_RATIOS = {
-  "1-2br": { May: 0.64, Jun: 0.77, Jul: 1.00, Aug: 1.00, Sep: 0.61, Oct: 0.61 },
-  "3br":   { May: 0.64, Jun: 0.80, Jul: 1.00, Aug: 1.00, Sep: 0.71, Oct: 0.67 },
-  "4br":   { May: 0.49, Jun: 0.66, Jul: 0.98, Aug: 1.02, Sep: 0.72, Oct: 0.56 },
-  "5+br":  { May: 0.64, Jun: 0.83, Jul: 0.99, Aug: 1.01, Sep: 0.68, Oct: 0.59 },
+  "1-2br": { May: 0.51, Jun: 0.68, Jul: 1.00, Aug: 1.00, Sep: 0.55, Oct: 0.58 },
+  "3br":   { May: 0.44, Jun: 0.68, Jul: 1.00, Aug: 1.00, Sep: 0.66, Oct: 0.54 },
+  "4br":   { May: 0.43, Jun: 0.66, Jul: 0.98, Aug: 1.02, Sep: 0.65, Oct: 0.43 },
+  "5+br":  { May: 0.46, Jun: 0.64, Jul: 0.99, Aug: 1.01, Sep: 0.61, Oct: 0.64 },
 };
 
 const OCCUPANCY = {
@@ -1240,6 +1261,7 @@ form.addEventListener("submit", (e) => {
   err.textContent = "";
 
   const label = document.getElementById("label").value.trim();
+  const address = document.getElementById("address").value.trim();
   const bucket = document.getElementById("bucket").value;
   const useCase = document.getElementById("use_case").value;
   const cenRaw = document.getElementById("peak_central").value.trim();
@@ -1247,6 +1269,7 @@ form.addEventListener("submit", (e) => {
   const strRaw = document.getElementById("peak_stretch").value.trim();
 
   if (!label) return (err.textContent = "Property label is required.");
+  if (!address) return (err.textContent = "Property address is required (it keys the projection log).");
   if (!ADR_RATIOS[bucket]) return (err.textContent = "Select a valid bedroom bucket.");
   if (useCase !== "owner_onboarding" && useCase !== "acquisition_underwriting") {
     return (err.textContent = "Select a valid use case.");
@@ -1276,7 +1299,8 @@ form.addEventListener("submit", (e) => {
   const haircut = useCase === "acquisition_underwriting";
   const conUsed = haircut ? conEntered * UNDERWRITING_CONSERVATIVE_HAIRCUT : conEntered;
 
-  render({ label, bucket, useCase, conEntered, conUsed, cen, strch, haircut });
+  render({ label, address, bucket, useCase, conEntered, conUsed, cen, strch, haircut });
+  logProjection(lastState);
 });
 
 form.addEventListener("reset", () => {
@@ -1303,6 +1327,206 @@ document.getElementById("copy-para").addEventListener("click", async () => {
     alert("Copy failed — select and copy manually.");
   }
 });
+
+// ---------------------------------------------------------------------------
+// Projection log — every "Project revenue" run is saved to the backend so
+// past projections (inputs + outputs + the exact tables used) can be looked
+// up by address later. Offline/unreachable runs queue in localStorage and
+// flush on the next page load.
+// ---------------------------------------------------------------------------
+const LOG_KEY_LS = "gwproj_api_key";
+const LOG_BASE_LS = "gwproj_api_base";
+const LOG_PENDING_LS = "gwproj_pending";
+
+function logApiBase() {
+  if (location.protocol.startsWith("http")) return "";
+  return localStorage.getItem(LOG_BASE_LS) || "";
+}
+
+function logApiKey(forcePrompt) {
+  let k = localStorage.getItem(LOG_KEY_LS);
+  if (!k || forcePrompt) {
+    k = prompt("Projection-log API key (stored in this browser):", k || "");
+    if (k) localStorage.setItem(LOG_KEY_LS, k.trim());
+  }
+  return (k || "").trim();
+}
+
+function logStatus(msg, ok) {
+  const el = document.getElementById("log-status");
+  el.textContent = msg;
+  el.style.color = ok === false ? "#b3261e" : "";
+}
+
+function buildLogRecord(state) {
+  const num = (id) => {
+    const v = document.getElementById(id).value.trim();
+    return v === "" ? null : Number(v);
+  };
+  const scen = (peak) => {
+    const p = projectScenario(state.bucket, peak);
+    return {
+      peak_adr: Math.round(peak * 100) / 100,
+      total: Math.round(p.total),
+      months: p.rows.map((r) => ({
+        month: r.month, adr: Math.round(r.adr), nights: Math.round(r.nights * 10) / 10,
+        occupancy: r.occupancy, revenue: Math.round(r.revenue),
+      })),
+    };
+  };
+  return {
+    address: state.address,
+    label: state.label,
+    bucket: state.bucket,
+    use_case: state.useCase,
+    framework_version: FRAMEWORK_VERSION,
+    inputs: {
+      peak_mid: state.cen,
+      peak_soft_entered: num("peak_conservative"),
+      peak_strong_entered: num("peak_stretch"),
+      peak_soft_used: Math.round(state.conUsed * 100) / 100,
+      peak_strong_used: Math.round(state.strch * 100) / 100,
+      underwriting_haircut_applied: state.haircut,
+      turnover_charge: num("turnover_charge"),
+      booking_fee_pct: num("booking_fee_pct"),
+      mgmt_rate_pct: num("mgmt_rate_pct"),
+    },
+    outputs: {
+      soft: scen(state.conUsed),
+      mid: scen(state.cen),
+      strong: scen(state.strch),
+      tables_snapshot: {
+        adr_ratios: ADR_RATIOS[state.bucket],
+        occupancy: OCCUPANCY[state.bucket],
+      },
+    },
+    notes: "",
+  };
+}
+
+async function postProjection(record) {
+  const base = logApiBase();
+  if (base === "" && !location.protocol.startsWith("http")) {
+    throw new Error("no-api-base");
+  }
+  const key = logApiKey(false);
+  if (!key) throw new Error("no-key");
+  const resp = await fetch(base + "/api/projections", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+    body: JSON.stringify(record),
+  });
+  if (resp.status === 401) {
+    localStorage.removeItem(LOG_KEY_LS);
+    throw new Error("bad-key");
+  }
+  if (!resp.ok) throw new Error("http-" + resp.status);
+  return resp.json();
+}
+
+async function logProjection(state) {
+  const record = buildLogRecord(state);
+  logStatus("Logging…");
+  try {
+    const out = await postProjection(record);
+    logStatus(`Logged ✓ #${out.id}`, true);
+  } catch (e) {
+    const pending = JSON.parse(localStorage.getItem(LOG_PENDING_LS) || "[]");
+    pending.push({ queued_at: new Date().toISOString(), record });
+    localStorage.setItem(LOG_PENDING_LS, JSON.stringify(pending));
+    if (e.message === "no-api-base") {
+      logStatus("Not logged — open the tool from its hosted URL (queued locally).", false);
+    } else if (e.message === "bad-key" || e.message === "no-key") {
+      logStatus("Not logged — API key missing/invalid (queued locally).", false);
+    } else {
+      logStatus("Log failed — queued locally, will retry on next load.", false);
+    }
+  }
+}
+
+async function flushPendingLogs() {
+  const pending = JSON.parse(localStorage.getItem(LOG_PENDING_LS) || "[]");
+  if (!pending.length) return;
+  const still = [];
+  for (const item of pending) {
+    try {
+      item.record.notes = (item.record.notes || "") +
+        ` [queued offline ${item.queued_at}, flushed ${new Date().toISOString()}]`;
+      await postProjection(item.record);
+    } catch {
+      still.push(item);
+    }
+  }
+  localStorage.setItem(LOG_PENDING_LS, JSON.stringify(still));
+  if (pending.length !== still.length) {
+    logStatus(`Flushed ${pending.length - still.length} queued projection(s) ✓`, true);
+  }
+}
+
+const escapeAttr = (s) => escapeHtml(String(s ?? ""));
+
+async function refreshHistory() {
+  const list = document.getElementById("history-list");
+  list.textContent = "Loading…";
+  try {
+    const base = logApiBase();
+    const key = logApiKey(false);
+    const q = document.getElementById("history-q").value.trim();
+    const resp = await fetch(
+      base + "/api/projections" + (q ? "?q=" + encodeURIComponent(q) : ""),
+      { headers: { Authorization: "Bearer " + key } });
+    if (resp.status === 401) {
+      localStorage.removeItem(LOG_KEY_LS);
+      list.textContent = "API key rejected — click Search to re-enter it.";
+      return;
+    }
+    const rows = await resp.json();
+    if (!rows.length) { list.textContent = "No saved projections" + (q ? " matching “" + q + "”." : " yet."); return; }
+    list.innerHTML = rows.map((r) => {
+      const i = r.inputs || {};
+      const peaks = [i.peak_soft_used, i.peak_mid, i.peak_strong_used]
+        .map((v) => (v == null ? "—" : "$" + Math.round(v))).join(" / ");
+      return `<div style="padding:8px 0;border-bottom:1px solid #e3e3e3">
+        <strong>${escapeAttr(r.address)}</strong> · ${escapeAttr(r.label)} · ${escapeAttr(r.bucket)}
+        <span class="hint">#${r.id} · ${escapeAttr((r.created_at || "").slice(0, 10))} · ${escapeAttr(r.use_case)}
+        · peaks ${peaks} · v${escapeAttr(r.framework_version)}</span>
+        <button type="button" data-load="${r.id}" style="margin-left:8px">Load</button>
+      </div>`;
+    }).join("");
+    list.querySelectorAll("[data-load]").forEach((btn) =>
+      btn.addEventListener("click", () => loadProjection(rows.find((r) => r.id === Number(btn.dataset.load)))));
+  } catch {
+    list.textContent = "Could not reach the projection log.";
+  }
+}
+
+function loadProjection(r) {
+  if (!r) return;
+  const i = r.inputs || {};
+  const set = (id, v) => { document.getElementById(id).value = v == null ? "" : v; };
+  set("label", r.label); set("address", r.address);
+  document.getElementById("bucket").value = r.bucket;
+  document.getElementById("use_case").value = r.use_case;
+  set("peak_central", i.peak_mid);
+  set("peak_conservative", i.peak_soft_entered);
+  set("peak_stretch", i.peak_strong_entered);
+  set("turnover_charge", i.turnover_charge);
+  set("booking_fee_pct", i.booking_fee_pct);
+  set("mgmt_rate_pct", i.mgmt_rate_pct);
+  document.getElementById("history").style.display = "none";
+  logStatus(`Loaded #${r.id} (${r.address}) — click “Project revenue” to re-run.`, true);
+  window.scrollTo({ top: 0 });
+}
+
+document.getElementById("history-btn").addEventListener("click", () => {
+  document.getElementById("history").style.display = "block";
+  refreshHistory();
+});
+document.getElementById("history-refresh").addEventListener("click", refreshHistory);
+document.getElementById("history-close").addEventListener("click", () => {
+  document.getElementById("history").style.display = "none";
+});
+flushPendingLogs();
 </script>
 </body>
 </html>

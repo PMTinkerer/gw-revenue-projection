@@ -17,14 +17,16 @@ from typing import Dict, List, Optional, Tuple
 
 
 # ---------------------------------------------------------------------------
-# v1.0 LOCKED CONSTANTS
-# Source: GW_Revenue_Projection_Framework_v1.0 (April 2026), Sections 4 & 5.
-# These values will be re-derived and possibly updated after the 2026 season
-# per Section 10 (Year-End Validation Plan). Do not edit without bumping to
-# v2.0 and refreshing the PDF framework alongside the change.
+# v1.1 LOCKED CONSTANTS
+# Source: GW_Revenue_Projection_Framework_v1.0 (April 2026), Sections 4 & 5,
+# recalibrated 2026-07-06 against Guesty actuals (see README "v1.1
+# recalibration"): ADR ratios for May/Jun are the mean of 2025 and 2026
+# realized bucket ratios; Sep/Oct are 2025 realized (final season) ratios;
+# Jul/Aug anchors and the OCCUPANCY table were validated and left unchanged.
+# Re-derive after the 2026 season closes via scripts/benchmark_actuals.py.
 # ---------------------------------------------------------------------------
 
-FRAMEWORK_VERSION = "1.0"
+FRAMEWORK_VERSION = "1.1"
 
 MONTHS: List[str] = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"]
 
@@ -39,17 +41,24 @@ DAYS_IN_MONTH: Dict[str, int] = {
 
 BUCKETS: List[str] = ["1-2br", "3br", "4br", "5+br"]
 
-# ADR ratios: month ADR = peak Jul/Aug ADR * ratio.
-# Framework Section 4. Peak months Jul/Aug are near 1.0 by construction.
+# ADR ratios: month ADR = peak Jul/Aug ADR * ratio. "Peak ADR" means the
+# expected AVERAGE booked nightly rate across all of July+August combined —
+# not the best-week rate (best week runs ~15% above the two-month blend).
+# v1.1: May/Jun = mean of 2025+2026 realized bucket ratios (Guesty, open
+# nights); Sep/Oct = 2025 realized; Jul/Aug near 1.0 by construction,
+# validated within 0.04 in both seasons.
 ADR_RATIOS: Dict[str, Dict[str, float]] = {
-    "1-2br": {"May": 0.64, "Jun": 0.77, "Jul": 1.00, "Aug": 1.00, "Sep": 0.61, "Oct": 0.61},
-    "3br":   {"May": 0.64, "Jun": 0.80, "Jul": 1.00, "Aug": 1.00, "Sep": 0.71, "Oct": 0.67},
-    "4br":   {"May": 0.49, "Jun": 0.66, "Jul": 0.98, "Aug": 1.02, "Sep": 0.72, "Oct": 0.56},
-    "5+br":  {"May": 0.64, "Jun": 0.83, "Jul": 0.99, "Aug": 1.01, "Sep": 0.68, "Oct": 0.59},
+    "1-2br": {"May": 0.51, "Jun": 0.68, "Jul": 1.00, "Aug": 1.00, "Sep": 0.55, "Oct": 0.58},
+    "3br":   {"May": 0.44, "Jun": 0.68, "Jul": 1.00, "Aug": 1.00, "Sep": 0.66, "Oct": 0.54},
+    "4br":   {"May": 0.43, "Jun": 0.66, "Jul": 0.98, "Aug": 1.02, "Sep": 0.65, "Oct": 0.43},
+    "5+br":  {"May": 0.46, "Jun": 0.64, "Jul": 0.99, "Aug": 1.01, "Sep": 0.61, "Oct": 0.64},
 }
 
 # Occupancy rates. Jul/Aug are the 92% operational floor (Section 5); the
 # other months are PriceLabs bed-segmented 2025 market occupancy.
+# v1.1 validation (2026 actuals, occupancy of owner-released nights): May
+# ran 51% vs 50% assumed, June 74% vs 63%, July 92% vs 92% — table kept
+# unchanged (conservative in June, which is the safe direction for sales).
 OCCUPANCY: Dict[str, Dict[str, float]] = {
     "1-2br": {"May": 0.53, "Jun": 0.65, "Jul": 0.92, "Aug": 0.92, "Sep": 0.61, "Oct": 0.62},
     "3br":   {"May": 0.53, "Jun": 0.65, "Jul": 0.92, "Aug": 0.92, "Sep": 0.59, "Oct": 0.57},

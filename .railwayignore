@@ -1,0 +1,8 @@
+.git/
+.venv/
+data/
+__pycache__/
+.pytest_cache/
+.benchmark_cache/
+.planning/
+docs/
