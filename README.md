@@ -52,7 +52,7 @@ All four bucket × six month ADR ratios and occupancy values live as constants a
 Every "Project revenue" run in the HTML tool is saved to a small FastAPI + SQLite service (`app/main.py`) so past projections sent to homeowners can be looked up later — address, all inputs, all three scenarios' monthly numbers, and a snapshot of the exact assumption tables used at the time.
 
 - **Hosted on Railway** (service `gw-revenue-projection`, SQLite on a `/data` volume). The tool is served at the service root `/`; use that URL rather than opening the HTML file locally.
-- **Auth:** single shared key in the `PROJECTIONS_API_KEY` Railway env var (also in `~/.env` as `GW_PROJECTIONS_API_KEY`). The browser asks for it once and stores it in localStorage.
+- **Auth:** a single shared password in the `PROJECTIONS_API_KEY` Railway env var (also in `~/.env` as `GW_PROJECTIONS_API_KEY`). The browser asks for it once and stores it in localStorage.
 - **History:** the "History" button in the tool lists saved projections (search by address or label) and can reload any record's inputs back into the form.
 - **Offline behavior:** if the API is unreachable the run queues in localStorage and flushes on the next page load — the status chip next to the buttons always tells you whether the run was logged.
 - API: `POST /api/projections`, `GET /api/projections?q=`, `GET /api/projections/{id}`, `DELETE /api/projections/{id}` (Bearer auth), `GET /healthz`.
