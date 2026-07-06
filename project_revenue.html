@@ -1346,7 +1346,7 @@ function logApiBase() {
 function logApiKey(forcePrompt) {
   let k = localStorage.getItem(LOG_KEY_LS);
   if (!k || forcePrompt) {
-    k = prompt("Projection-log API key (stored in this browser):", k || "");
+    k = prompt("Projection log password (stored in this browser):", k || "");
     if (k) localStorage.setItem(LOG_KEY_LS, k.trim());
   }
   return (k || "").trim();
@@ -1437,7 +1437,7 @@ async function logProjection(state) {
     if (e.message === "no-api-base") {
       logStatus("Not logged — open the tool from its hosted URL (queued locally).", false);
     } else if (e.message === "bad-key" || e.message === "no-key") {
-      logStatus("Not logged — API key missing/invalid (queued locally).", false);
+      logStatus("Not logged — password missing/incorrect (queued locally).", false);
     } else {
       logStatus("Log failed — queued locally, will retry on next load.", false);
     }
@@ -1477,7 +1477,7 @@ async function refreshHistory() {
       { headers: { Authorization: "Bearer " + key } });
     if (resp.status === 401) {
       localStorage.removeItem(LOG_KEY_LS);
-      list.textContent = "API key rejected — click Search to re-enter it.";
+      list.textContent = "Password rejected — click Search to re-enter it.";
       return;
     }
     const rows = await resp.json();
